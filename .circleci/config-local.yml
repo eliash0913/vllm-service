@@ -22,8 +22,14 @@ jobs:
           name: Install CUDA toolkit
           command: ./scripts/install_cuda_toolkit.sh
       - run:
+          name: Install Miniconda
+          command: ./scripts/install_miniconda.sh
+      - run:
           name: Download dependencies
           command: ./scripts/download_dependencies.sh
+      - run:
+          name: Build vLLM environment
+          command: ./scripts/build_vllm.sh
       - run:
           name: Build RPM (Rocky 8)
           no_output_timeout: 30m
@@ -51,8 +57,14 @@ jobs:
           name: Install CUDA toolkit
           command: ./scripts/install_cuda_toolkit.sh
       - run:
+          name: Install Miniconda
+          command: ./scripts/install_miniconda.sh
+      - run:
           name: Download dependencies
           command: ./scripts/download_dependencies.sh
+      - run:
+          name: Build vLLM environment
+          command: ./scripts/build_vllm.sh
       - run:
           name: Build RPM (Rocky 9)
           no_output_timeout: 30m
@@ -80,8 +92,14 @@ jobs:
       #     name: Install CUDA toolkit
       #     command: ./scripts/install_cuda_toolkit.sh
       - run:
+          name: Install Miniconda
+          command: ./scripts/install_miniconda.sh
+      - run:
           name: Download dependencies
           command: ./scripts/download_dependencies.sh
+      - run:
+          name: Build vLLM environment
+          command: ./scripts/build_vllm.sh
       - run:
           name: Build DEB
           timeout: 60m
