@@ -26,6 +26,8 @@ jobs:
           command: ./scripts/download_dependencies.sh
       - run:
           name: Build RPM (Rocky 8)
+          no_output_timeout: 30m
+          timeout: 60m
           command: ./scripts/build_rpm.sh
 
   build-rpm-rocky9:
@@ -53,6 +55,8 @@ jobs:
           command: ./scripts/download_dependencies.sh
       - run:
           name: Build RPM (Rocky 9)
+          no_output_timeout: 30m
+          timeout: 60m
           command: ./scripts/build_rpm.sh
 
   build-deb:
@@ -80,6 +84,8 @@ jobs:
           command: ./scripts/download_dependencies.sh
       - run:
           name: Build DEB
+          timeout: 60m
+          no_output_timeout: 30m
           command: ./scripts/build_deb.sh
 
 workflows:

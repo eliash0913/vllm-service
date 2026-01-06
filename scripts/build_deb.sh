@@ -13,6 +13,25 @@ RUN_SCRIPT="${ROOT_DIR}/scripts/run_vllm.sh"
 
 mkdir -p "${WHEELHOUSE_DIR}" "${PKG_DIR}"
 
+run_with_heartbeat() {
+  local label="$1"
+  shift
+  local interval="${HEARTBEAT_INTERVAL:-60}"
+  local start_ts
+  start_ts="$(date +%s)"
+
+  "$@" &
+  local cmd_pid=$!
+  while kill -0 "${cmd_pid}" 2>/dev/null; do
+    local now_ts
+    now_ts="$(date +%s)"
+    local elapsed=$((now_ts - start_ts))
+    echo "[${label}] still running... ${elapsed}s elapsed"
+    sleep "${interval}"
+  done
+  wait "${cmd_pid}"
+}
+
 if [[ -z "$(ls -A "${WHEELHOUSE_DIR}" 2>/dev/null || true)" ]]; then
   echo "ERROR: wheelhouse is empty. Run ./scripts/download_dependencies.sh first." >&2
   exit 1
@@ -31,9 +50,9 @@ fi
 
 "${PYTHON_BIN}" -m venv "${STAGE_DIR}/opt/vllm/venv"
 if [[ "${PIP_UPGRADE:-0}" == "1" ]]; then
-  "${STAGE_DIR}/opt/vllm/venv/bin/python" -m pip install --upgrade pip
+  run_with_heartbeat "pip-upgrade" "${STAGE_DIR}/opt/vllm/venv/bin/python" -m pip install --upgrade pip
 fi
-"${STAGE_DIR}/opt/vllm/venv/bin/pip" install --no-index --find-links "${WHEELHOUSE_DIR}" "vllm==${VERSION}"
+run_with_heartbeat "pip-install" "${STAGE_DIR}/opt/vllm/venv/bin/pip" install --no-index --find-links "${WHEELHOUSE_DIR}" "vllm==${VERSION}"
 
 mkdir -p "${STAGE_DIR}/opt/vllm/wheelhouse"
 cp -a "${WHEELHOUSE_DIR}/." "${STAGE_DIR}/opt/vllm/wheelhouse/"
@@ -80,6 +99,6 @@ EOF
 chmod 0755 "${STAGE_DIR}/DEBIAN/postinst" "${STAGE_DIR}/DEBIAN/postrm"
 
 OUTPUT="${PKG_DIR}/vllm-service_${VERSION}-1_amd64.deb"
-dpkg-deb --build "${STAGE_DIR}" "${OUTPUT}"
+run_with_heartbeat "dpkg-deb" dpkg-deb --build "${STAGE_DIR}" "${OUTPUT}"
 
 echo "DEB package written to ${OUTPUT}"
