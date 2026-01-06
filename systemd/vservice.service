@@ -1,16 +1,16 @@
 [Unit]
-Description=vLLM Service
+Description=vService Wrapper for vLLM
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
 EnvironmentFile=-/etc/vllm/vllm.env
-ExecStart=/opt/vllm/bin/run_vllm.sh
+ExecStart=/opt/vllm/bin/vservice.sh
 Restart=on-failure
 RestartSec=5
-User=vllm
-Group=vllm
+User=vservice
+Group=vservice
 LimitNOFILE=1048576
 
 [Install]

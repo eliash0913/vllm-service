@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="0.11.0"
+VLLM_VERSION="${VLLM_VERSION:-0.11.0}"
+SERVICE_VERSION="${SERVICE_VERSION:-}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ARTIFACTS_DIR="${ROOT_DIR}/artifacts"
 WHEELHOUSE_DIR="${ARTIFACTS_DIR}/wheelhouse"
@@ -10,14 +11,23 @@ BUILD_DIR="${ARTIFACTS_DIR}/build"
 PKG_DIR="${ARTIFACTS_DIR}/packages/rpm"
 SPEC_FILE="${ROOT_DIR}/packaging/vllm.spec"
 ENV_FILE="${ROOT_DIR}/packaging/vllm.env"
-SERVICE_FILE="${ROOT_DIR}/systemd/vllm.service"
-RUN_SCRIPT="${ROOT_DIR}/scripts/run_vllm.sh"
+SERVICE_FILE="${ROOT_DIR}/systemd/vservice.service"
+RUN_SCRIPT="${ROOT_DIR}/packaging/vservice.sh"
 
 mkdir -p "${WHEELHOUSE_DIR}" "${STAGE_DIR}" "${BUILD_DIR}" "${PKG_DIR}"
 
 if [[ -z "$(ls -A "${WHEELHOUSE_DIR}" 2>/dev/null || true)" ]]; then
   echo "ERROR: wheelhouse is empty. Run ./scripts/download_dependencies.sh first." >&2
   exit 1
+fi
+
+if [[ -z "${SERVICE_VERSION}" ]]; then
+  SPEC_VERSION="$(awk -F: '/^Version:/ {gsub(/[[:space:]]+/, "", $2); print $2; exit}' "${SPEC_FILE}")"
+  if [[ -n "${SPEC_VERSION}" ]]; then
+    SERVICE_VERSION="${SPEC_VERSION}"
+  else
+    SERVICE_VERSION="${VLLM_VERSION}"
+  fi
 fi
 
 rm -rf "${STAGE_DIR}"
@@ -35,16 +45,16 @@ fi
 if [[ "${PIP_UPGRADE:-0}" == "1" ]]; then
   "${STAGE_DIR}/opt/vllm/venv/bin/python" -m pip install --upgrade pip
 fi
-"${STAGE_DIR}/opt/vllm/venv/bin/pip" install --no-index --find-links "${WHEELHOUSE_DIR}" "vllm==${VERSION}"
+"${STAGE_DIR}/opt/vllm/venv/bin/pip" install --no-index --find-links "${WHEELHOUSE_DIR}" "vllm==${VLLM_VERSION}"
 
 mkdir -p "${STAGE_DIR}/opt/vllm/wheelhouse"
 cp -a "${WHEELHOUSE_DIR}/." "${STAGE_DIR}/opt/vllm/wheelhouse/"
 
-install -m 0755 "${RUN_SCRIPT}" "${STAGE_DIR}/opt/vllm/bin/run_vllm.sh"
+install -m 0755 "${RUN_SCRIPT}" "${STAGE_DIR}/opt/vllm/bin/vservice.sh"
 install -m 0644 "${ENV_FILE}" "${STAGE_DIR}/etc/vllm/vllm.env"
-install -m 0644 "${SERVICE_FILE}" "${STAGE_DIR}/usr/lib/systemd/system/vllm.service"
+install -m 0644 "${SERVICE_FILE}" "${STAGE_DIR}/usr/lib/systemd/system/vservice.service"
 
-TARBALL="${BUILD_DIR}/vllm-service-${VERSION}.tar.gz"
+TARBALL="${BUILD_DIR}/vservice-${SERVICE_VERSION}.tar.gz"
 tar -C "${STAGE_DIR}" -czf "${TARBALL}" .
 
 RPMBUILD_DIR="${BUILD_DIR}/rpmbuild"

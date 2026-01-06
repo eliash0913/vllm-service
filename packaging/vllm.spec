@@ -1,10 +1,10 @@
-Name:           vllm-service
+Name:           vservice
 Version:        0.11.0
 Release:        1%{?dist}
-Summary:        vLLM service daemon
+Summary:        vservice wrapper daemon for vLLM
 License:        Apache-2.0
 URL:            https://github.com/vllm-project/vllm
-Source0:        vllm-service-%{version}.tar.gz
+Source0:        vservice-%{version}.tar.gz
 BuildArch:      x86_64
 Requires:       python3
 Requires(pre):  shadow-utils
@@ -13,7 +13,7 @@ Requires(preun): systemd
 Requires(postun): systemd
 
 %description
-Packages vLLM with a systemd service wrapper.
+Packages vLLM with the vservice systemd wrapper.
 
 %prep
 %setup -q -c -T
@@ -25,21 +25,21 @@ mkdir -p %{buildroot}
 tar -xzf %{SOURCE0} -C %{buildroot}
 
 %pre
-getent group vllm >/dev/null || groupadd -r vllm
-getent passwd vllm >/dev/null || useradd -r -g vllm -s /sbin/nologin -d /opt/vllm vllm
+getent group vservice >/dev/null || groupadd -r vservice
+getent passwd vservice >/dev/null || useradd -r -g vservice -s /sbin/nologin -d /opt/vllm vservice
 
 %post
-%systemd_post vllm.service
+%systemd_post vservice.service
 
 %preun
-%systemd_preun vllm.service
+%systemd_preun vservice.service
 
 %postun
-%systemd_postun_with_restart vllm.service
+%systemd_postun_with_restart vservice.service
 
 %files
 /opt/vllm
 %config(noreplace) /etc/vllm/vllm.env
-/usr/lib/systemd/system/vllm.service
+/usr/lib/systemd/system/vservice.service
 
 %changelog

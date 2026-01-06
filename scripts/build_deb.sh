@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="0.11.0"
+VLLM_VERSION="${VLLM_VERSION:-0.11.0}"
+SERVICE_VERSION="${SERVICE_VERSION:-${VLLM_VERSION}}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ARTIFACTS_DIR="${ROOT_DIR}/artifacts"
 WHEELHOUSE_DIR="${ARTIFACTS_DIR}/wheelhouse"
 STAGE_DIR="${ARTIFACTS_DIR}/stage-deb"
 PKG_DIR="${ARTIFACTS_DIR}/packages/deb"
 ENV_FILE="${ROOT_DIR}/packaging/vllm.env"
-SERVICE_FILE="${ROOT_DIR}/systemd/vllm.service"
-RUN_SCRIPT="${ROOT_DIR}/scripts/run_vllm.sh"
+SERVICE_FILE="${ROOT_DIR}/systemd/vservice.service"
+RUN_SCRIPT="${ROOT_DIR}/packaging/vservice.sh"
 
 mkdir -p "${WHEELHOUSE_DIR}" "${PKG_DIR}"
 
@@ -52,38 +53,38 @@ fi
 if [[ "${PIP_UPGRADE:-0}" == "1" ]]; then
   run_with_heartbeat "pip-upgrade" "${STAGE_DIR}/opt/vllm/venv/bin/python" -m pip install --upgrade pip
 fi
-run_with_heartbeat "pip-install" "${STAGE_DIR}/opt/vllm/venv/bin/pip" install --no-index --find-links "${WHEELHOUSE_DIR}" "vllm==${VERSION}"
+run_with_heartbeat "pip-install" "${STAGE_DIR}/opt/vllm/venv/bin/pip" install --no-index --find-links "${WHEELHOUSE_DIR}" "vllm==${VLLM_VERSION}"
 
 mkdir -p "${STAGE_DIR}/opt/vllm/wheelhouse"
 cp -a "${WHEELHOUSE_DIR}/." "${STAGE_DIR}/opt/vllm/wheelhouse/"
 
-install -m 0755 "${RUN_SCRIPT}" "${STAGE_DIR}/opt/vllm/bin/run_vllm.sh"
+install -m 0755 "${RUN_SCRIPT}" "${STAGE_DIR}/opt/vllm/bin/vservice.sh"
 install -m 0644 "${ENV_FILE}" "${STAGE_DIR}/etc/vllm/vllm.env"
-install -m 0644 "${SERVICE_FILE}" "${STAGE_DIR}/usr/lib/systemd/system/vllm.service"
+install -m 0644 "${SERVICE_FILE}" "${STAGE_DIR}/usr/lib/systemd/system/vservice.service"
 
 cat > "${STAGE_DIR}/DEBIAN/control" <<EOF
-Package: vllm-service
-Version: ${VERSION}-1
+Package: vservice
+Version: ${SERVICE_VERSION}-1
 Section: utils
 Priority: optional
 Architecture: amd64
 Maintainer: vllm packaging <packaging@example.com>
 Depends: python3, systemd
-Description: vLLM service daemon
- Packages vLLM with a systemd service wrapper.
+Description: vservice wrapper daemon for vLLM
+ Packages vLLM with the vservice systemd wrapper.
 EOF
 
 cat > "${STAGE_DIR}/DEBIAN/postinst" <<'EOF'
 #!/usr/bin/env bash
 set -e
-if ! getent group vllm >/dev/null; then
-  groupadd --system vllm
+if ! getent group vservice >/dev/null; then
+  groupadd --system vservice
 fi
-if ! getent passwd vllm >/dev/null; then
-  useradd --system --gid vllm --shell /usr/sbin/nologin --home /opt/vllm vllm
+if ! getent passwd vservice >/dev/null; then
+  useradd --system --gid vservice --shell /usr/sbin/nologin --home /opt/vllm vservice
 fi
 systemctl daemon-reload
-systemctl enable vllm.service >/dev/null 2>&1 || true
+systemctl enable vservice.service >/dev/null 2>&1 || true
 EOF
 
 cat > "${STAGE_DIR}/DEBIAN/postrm" <<'EOF'
@@ -98,7 +99,7 @@ EOF
 
 chmod 0755 "${STAGE_DIR}/DEBIAN/postinst" "${STAGE_DIR}/DEBIAN/postrm"
 
-OUTPUT="${PKG_DIR}/vllm-service_${VERSION}-1_amd64.deb"
+OUTPUT="${PKG_DIR}/vservice_${SERVICE_VERSION}-1_amd64.deb"
 run_with_heartbeat "dpkg-deb" dpkg-deb --build "${STAGE_DIR}" "${OUTPUT}"
 
 echo "DEB package written to ${OUTPUT}"
