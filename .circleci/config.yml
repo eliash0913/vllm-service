@@ -1,0 +1,99 @@
+version: 2.1
+
+jobs:
+  build-rpm-rocky8:
+    docker:
+      - image: rockylinux:8
+    resource_class: 2xlarge
+    environment:
+      PYTHON_BIN: /opt/python/3.12.11/bin/python3.12
+      CUDA_HOME: /usr/local/cuda
+      CUDA_MAJOR_MINOR: "12-9"
+      VLLM_BUILD_FROM_SOURCE: "1"
+      TORCH_CUDA_ARCH_LIST: "8.9"
+    steps:
+      - checkout
+      - run:
+          name: Install build requirements
+          command: ./scripts/collect_requirements.sh --install
+      - run:
+          name: Install Python 3.12.11
+          command: ./scripts/install_python312.sh
+      - run:
+          name: Install CUDA toolkit
+          command: ./scripts/install_cuda_toolkit.sh
+      - run:
+          name: Download dependencies
+          command: ./scripts/download_dependencies.sh
+      - run:
+          name: Build RPM (Rocky 8)
+          command: ./scripts/build_rpm.sh
+      - store_artifacts:
+          path: artifacts/packages/rpm
+
+  build-rpm-rocky9:
+    docker:
+      - image: rockylinux:9
+    resource_class: 2xlarge
+    environment:
+      PYTHON_BIN: /opt/python/3.12.11/bin/python3.12
+      CUDA_HOME: /usr/local/cuda
+      CUDA_MAJOR_MINOR: "12-9"
+      VLLM_BUILD_FROM_SOURCE: "1"
+      TORCH_CUDA_ARCH_LIST: "8.9"
+    steps:
+      - checkout
+      - run:
+          name: Install build requirements
+          command: ./scripts/collect_requirements.sh --install
+      - run:
+          name: Install Python 3.12.11
+          command: ./scripts/install_python312.sh
+      - run:
+          name: Install CUDA toolkit
+          command: ./scripts/install_cuda_toolkit.sh
+      - run:
+          name: Download dependencies
+          command: ./scripts/download_dependencies.sh
+      - run:
+          name: Build RPM (Rocky 9)
+          command: ./scripts/build_rpm.sh
+      - store_artifacts:
+          path: artifacts/packages/rpm
+
+  build-deb:
+    docker:
+      - image: ubuntu:22.04
+    resource_class: 2xlarge
+    environment:
+      PYTHON_BIN: /opt/python/3.12.11/bin/python3.12
+      CUDA_HOME: /usr/local/cuda
+      CUDA_MAJOR_MINOR: "12-9"
+      VLLM_BUILD_FROM_SOURCE: "1"
+      TORCH_CUDA_ARCH_LIST: "8.9"
+    steps:
+      - checkout
+      - run:
+          name: Install build requirements
+          command: ./scripts/collect_requirements.sh --install
+      - run:
+          name: Install Python 3.12.11
+          command: ./scripts/install_python312.sh
+      - run:
+          name: Install CUDA toolkit
+          command: ./scripts/install_cuda_toolkit.sh
+      - run:
+          name: Download dependencies
+          command: ./scripts/download_dependencies.sh
+      - run:
+          name: Build DEB
+          command: ./scripts/build_deb.sh
+      - store_artifacts:
+          path: artifacts/packages/deb
+
+workflows:
+  build-packages:
+    jobs:
+      - build-rpm-rocky8
+      - build-rpm-rocky9
+      - build-deb

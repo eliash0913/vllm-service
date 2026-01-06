@@ -1,0 +1,17 @@
+[Unit]
+Description=vLLM Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/vllm/vllm.env
+ExecStart=/opt/vllm/bin/run_vllm.sh
+Restart=on-failure
+RestartSec=5
+User=vllm
+Group=vllm
+LimitNOFILE=1048576
+
+[Install]
+WantedBy=multi-user.target
