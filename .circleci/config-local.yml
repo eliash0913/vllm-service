@@ -6,12 +6,15 @@ jobs:
       - image: rockylinux:8
     working_directory: /tmp/_circleci_local_build_repo
     environment:
+      BASH_ENV: /tmp/circleci_bash_env
       PYTHON_BIN: /opt/python/3.12.11/bin/python3.12
       CUDA_HOME: /usr/local/cuda
       CUDA_MAJOR_MINOR: "12-9"
-      VLLM_BUILD_FROM_SOURCE: "1"
-      TORCH_CUDA_ARCH_LIST: "8.9"
+      VLLM_BUILD_FROM_SOURCE: "0"
     steps:
+      - run:
+          name: Load build env
+          command: echo "source ./scripts/build.env" >> "${BASH_ENV}"
       - run:
           name: Install build requirements
           command: ./scripts/collect_requirements.sh --install
@@ -32,8 +35,7 @@ jobs:
           command: ./scripts/build_vllm.sh
       - run:
           name: Build RPM (Rocky 8)
-          no_output_timeout: 30m
-          timeout: 60m
+          no_output_timeout: 60m
           command: ./scripts/build_rpm.sh
 
   build-rpm-rocky9:
@@ -41,12 +43,15 @@ jobs:
       - image: rockylinux:9
     working_directory: /tmp/_circleci_local_build_repo
     environment:
+      BASH_ENV: /tmp/circleci_bash_env
       PYTHON_BIN: /opt/python/3.12.11/bin/python3.12
       CUDA_HOME: /usr/local/cuda
       CUDA_MAJOR_MINOR: "12-9"
-      VLLM_BUILD_FROM_SOURCE: "1"
-      TORCH_CUDA_ARCH_LIST: "8.9"
+      VLLM_BUILD_FROM_SOURCE: "0"
     steps:
+      - run:
+          name: Load build env
+          command: echo "source ./scripts/build.env" >> "${BASH_ENV}"
       - run:
           name: Install build requirements
           command: ./scripts/collect_requirements.sh --install
@@ -67,8 +72,7 @@ jobs:
           command: ./scripts/build_vllm.sh
       - run:
           name: Build RPM (Rocky 9)
-          no_output_timeout: 30m
-          timeout: 60m
+          no_output_timeout: 60m
           command: ./scripts/build_rpm.sh
 
   build-deb:
@@ -76,21 +80,24 @@ jobs:
       - image: ubuntu:22.04
     working_directory: /tmp/_circleci_local_build_repo
     environment:
+      BASH_ENV: /tmp/circleci_bash_env
       PYTHON_BIN: /opt/python/3.12.11/bin/python3.12
       CUDA_HOME: /usr/local/cuda
       CUDA_MAJOR_MINOR: "12-9"
-      # VLLM_BUILD_FROM_SOURCE: "1"
-      # TORCH_CUDA_ARCH_LIST: "8.9"
+      VLLM_BUILD_FROM_SOURCE: "0"
     steps:
+      - run:
+          name: Load build env
+          command: echo "source ./scripts/build.env" >> "${BASH_ENV}"
       - run:
           name: Install build requirements
           command: ./scripts/collect_requirements.sh --install
       - run:
           name: Install Python 3.12.11
           command: ./scripts/install_python312.sh
-      # - run:
-      #     name: Install CUDA toolkit
-      #     command: ./scripts/install_cuda_toolkit.sh
+      - run:
+          name: Install CUDA toolkit
+          command: ./scripts/install_cuda_toolkit.sh
       - run:
           name: Install Miniconda
           command: ./scripts/install_miniconda.sh
@@ -102,8 +109,7 @@ jobs:
           command: ./scripts/build_vllm.sh
       - run:
           name: Build DEB
-          timeout: 60m
-          no_output_timeout: 30m
+          no_output_timeout: 60m
           command: ./scripts/build_deb.sh
 
 workflows:

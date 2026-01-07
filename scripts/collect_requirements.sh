@@ -41,15 +41,6 @@ rpm_pkgs=(
   openssl-devel
   libffi-devel
   zlib-devel
-  bzip2-devel
-  xz-devel
-  readline-devel
-  sqlite-devel
-  ncurses-devel
-  gdbm-devel
-  libuuid-devel
-  tk-devel
-  redhat-rpm-config
   rpm-build
 )
 
@@ -60,17 +51,6 @@ deb_pkgs=(
   libssl-dev
   libffi-dev
   zlib1g-dev
-  libbz2-dev
-  liblzma-dev
-  libreadline-dev
-  libsqlite3-dev
-  libncurses5-dev
-  libncursesw5-dev
-  libgdbm-dev
-  uuid-dev
-  tk-dev
-  debhelper
-  dpkg-dev
 )
 
 optional_rpm_pkgs=(

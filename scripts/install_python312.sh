@@ -53,8 +53,8 @@ install_build_deps_rpm() {
 }
 
 install_build_deps_deb() {
-  apt-get update
-  apt-get install -y \
+  env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get update
+  env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y \
     build-essential \
     libbz2-dev \
     libffi-dev \
